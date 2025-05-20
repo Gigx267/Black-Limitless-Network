@@ -969,17 +969,19 @@
     
 
    
+
 <!-- Hero Section -->
 <section id="home" class="hero text-center">
     <div class="slider-bg">
-        <video autoplay muted loop playsinline class="video-bg">
+        <video autoplay muted loop playsinline class="video-bg" poster="https://cdn.pixabay.com/video/2024/05/08/211152_tiny.mp4?preview">
             <source src="https://cdn.pixabay.com/video/2024/05/08/211152_tiny.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
+        <!-- Optional: fallback image for mobile browsers that block video -->
+        <img class="video-fallback" src="logo.jpg" alt="Background" style="display:none;">
     </div>
     
     <div class="hero-content">
-        
         <h1 class="display-1 hero-title">WHY SETTLE WHEN YOU CAN BE LIMITLESS</h1>
         <p class="body-2 hero-text">A network of luxury, exclusivity, and divine alignment.</p>
         <a href="about.html" class="cta-button">
@@ -989,36 +991,41 @@
 </section>
 
 <style>
-/* Base hero styles */
 .hero {
     position: relative;
     width: 100%;
     height: 100vh;
     overflow: hidden;
+    min-height: 500px;
 }
 
-/* Video background container */
 .slider-bg {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     z-index: -1;
+    overflow: hidden;
 }
 
-/* Video element styling - matches your slider example */
-.video-bg {
+.video-bg, .video-fallback {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     object-fit: cover;
     z-index: -1;
+    transition: opacity 0.3s;
+    background: #000;
 }
 
-/* Hero content styling */
+/* fallback image for browsers with no autoplay */
+.video-fallback {
+    object-fit: cover;
+}
+
 .hero-content {
     position: relative;
     z-index: 1;
@@ -1032,7 +1039,6 @@
     padding: 0 20px;
 }
 
-/* Button styling - keeping your original button styles */
 .cta-button {
     display: inline-block;
     padding: 12px 30px;
@@ -1056,24 +1062,19 @@
     box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
 }
 
-/* Mobile-specific styles */
 @media only screen and (max-width: 767px) {
-    .video-bg {
-        position: fixed;
+    .hero {
+        min-height: 100vh;
+        height: 100vh;
+    }
+    .video-bg, .video-fallback {
         width: 100vw;
         height: 100vh;
-        top: 0;
-        left: 0;
+        min-height: 100vh;
     }
-    
-    .hero {
-        height: 100vh;
-    }
-    
     .hero-content {
         padding: 0 15px;
     }
-    
     .hero-title {
         font-size: 2.5rem;
     }
@@ -1081,28 +1082,63 @@
 </style>
 
 <script>
-// JavaScript to ensure video plays on mobile
+// Utility: Detect if video background can autoplay inline on mobile
+function canAutoPlayVideo() {
+    // Try to play muted inline video on user gesture
+    return new Promise(resolve => {
+        const video = document.createElement('video');
+        video.src = "https://cdn.pixabay.com/video/2024/05/08/211152_tiny.mp4";
+        video.muted = true;
+        video.playsInline = true;
+        // Some iOS Safari block even muted video without gesture, so we rely on the main video element result.
+        video.autoplay = true;
+        let played = false;
+        video.play().then(() => {
+            played = true;
+            resolve(true);
+        }).catch(() => {
+            resolve(false);
+        });
+        // fallback timeout
+        setTimeout(() => {
+            if (!played) resolve(false);
+        }, 1000);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const video = document.querySelector('.video-bg');
-    
-    // Some browsers require this explicit play command
-    const playPromise = video.play();
-    
-    if (playPromise !== undefined) {
-        playPromise.catch(error => {
-            // Autoplay was prevented - could show a play button here
-            console.log('Autoplay prevented:', error);
-        });
-    }
-    
-    // Ensure these attributes are set (some browsers need this)
+    const fallback = document.querySelector('.video-fallback');
+
+    // Ensure correct attributes for mobile
     video.muted = true;
     video.playsInline = true;
     video.setAttribute('muted', '');
     video.setAttribute('playsinline', '');
+
+    // Try to play, show fallback if failed
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+        playPromise.then(() => {
+            // Video plays, hide fallback
+            if(fallback) fallback.style.display = 'none';
+            video.style.opacity = 1;
+        }).catch(() => {
+            // Autoplay prevented, show fallback
+            if(fallback) fallback.style.display = 'block';
+            video.style.opacity = 0;
+        });
+    }
+
+    // Extra: For some mobile browsers, check autoplay support
+    canAutoPlayVideo().then(canPlay => {
+        if (!canPlay) {
+            if(fallback) fallback.style.display = 'block';
+            video.style.opacity = 0;
+        }
+    });
 });
 </script>
-
 
     <!--About Us -->
 <!-- About Us Section -->
